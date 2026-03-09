@@ -1,0 +1,276 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { MapPin, ChevronDown, Bell, Search, Mic, ShoppingBasket, Pill, Leaf, FileText, QrCode, MicIcon } from 'lucide-react';
+import { StoreCard } from '../components/StoreCard';
+import { Loading } from '../components/common/Loading';
+import BottomNavBar from '../components/BottomNavBar';
+import { storeService } from '../services/stores';
+import { useAuthStore } from '../store/authStore';
+import { Store } from '../types';
+import toast from 'react-hot-toast';
+import { API_CONFIG } from '../config/api';
+
+const Home: React.FC = () => {
+  const navigate = useNavigate();
+  const { isDemoMode } = useAuthStore();
+  const [stores, setStores] = useState<Store[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [locationText, setLocationText] = useState('Detecting location...');
+  const [currentLat] = useState(API_CONFIG.DEFAULT_LAT);
+  const [currentLng] = useState(API_CONFIG.DEFAULT_LNG);
+
+  useEffect(() => {
+    initLocation();
+  }, [isDemoMode]);
+
+  const initLocation = async () => {
+    try {
+      if (isDemoMode) {
+        setLocationText('🧪 DEMO MODE');
+        await loadDemoStores();
+      } else {
+        setLocationText('Bhopal, Madhya Pradesh');
+        await loadNearbyStores();
+      }
+    } catch (error) {
+      console.error('Location error:', error);
+      setLocationText('Could not detect location');
+      setIsLoading(false);
+    }
+  };
+
+  const loadDemoStores = async () => {
+    setIsLoading(true);
+    try {
+      const data = await storeService.getDemoStores();
+      setStores(data);
+    } catch (error: any) {
+      toast.error('Failed to load demo stores');
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadNearbyStores = async () => {
+    setIsLoading(true);
+    try {
+      const data = await storeService.getNearbyStores(currentLat, currentLng);
+      setStores(data);
+    } catch (error: any) {
+      toast.error('Failed to load stores');
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const categories = [
+    { icon: ShoppingBasket, label: 'Groceries', isSelected: true },
+    { icon: Pill, label: 'Pharmacy', isSelected: false },
+    { icon: Leaf, label: 'Fresh', isSelected: false },
+    { icon: FileText, label: 'Stationery', isSelected: false },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background pb-20">
+      {/* Header */}
+      <div className="px-4 pt-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+              <ShoppingBasket className="w-5 h-5 text-buttonText" />
+            </div>
+            <div>
+              <div className="flex items-center">
+                <span className="text-lg font-black text-textPrimary tracking-wider">NUKKAD </span>
+                <span className="text-lg font-black text-primary tracking-wider">MART</span>
+              </div>
+              <p className="text-[11px] text-textTertiary">Market at your fingertip</p>
+            </div>
+          </div>
+
+          {/* Notification Bell */}
+          <button
+            onClick={() => toast('Notifications — Coming Soon!', { icon: '🔔' })}
+            className="w-11 h-11 bg-surface rounded-xl border border-border flex items-center justify-center relative"
+          >
+            <Bell className="w-5 h-5 text-textPrimary" />
+            <div className="absolute top-2.5 right-2.5 w-2 h-2 bg-error rounded-full" />
+          </button>
+        </div>
+      </div>
+
+      {/* Location Bar */}
+      <div className="px-4 pt-4">
+        <button className="flex items-center gap-2 w-full">
+          <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
+          <span className="text-sm font-medium text-textPrimary flex-1 text-left truncate">
+            {locationText}
+          </span>
+          <ChevronDown className="w-5 h-5 text-textSecondary flex-shrink-0" />
+        </button>
+      </div>
+
+      {/* Demo Mode Banner */}
+      {isDemoMode && (
+        <div className="px-4 pt-3">
+          <div className="bg-gradient-to-r from-orange-400/20 to-orange-600/15 border border-orange-400/40 rounded-xl p-3">
+            <div className="flex items-center gap-3">
+              <span className="text-lg">🧪</span>
+              <div className="flex-1">
+                <p className="text-sm font-extrabold text-orange-400 tracking-wider">DEMO MODE</p>
+                <p className="text-[11px] text-textSecondary">Test stores with demo inventory — no real orders</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Search Bar */}
+      <div className="px-4 pt-4">
+        <button
+          onClick={() => navigate('/search')}
+          className="w-full h-12 bg-surface rounded-2xl border border-border flex items-center px-4 gap-3"
+        >
+          <Search className="w-5 h-5 text-textTertiary" />
+          <span className="text-sm text-textTertiary flex-1 text-left">
+            Search for items or shops...
+          </span>
+          <div className="w-px h-6 bg-border" />
+          <Mic className="w-5 h-5 text-textTertiary" />
+        </button>
+      </div>
+
+      {/* Categories */}
+      <div className="px-4 pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-textPrimary">Categories</h2>
+          <button className="text-[13px] font-semibold text-primary">View All</button>
+        </div>
+        <div className="flex justify-around">
+          {categories.map((cat, index) => (
+            <button key={index} className="flex flex-col items-center gap-2">
+              <div
+                className={`w-15 h-15 rounded-full flex items-center justify-center ${
+                  cat.isSelected
+                    ? 'bg-primary'
+                    : 'bg-surface border border-border'
+                }`}
+              >
+                <cat.icon
+                  className={`w-7 h-7 ${
+                    cat.isSelected ? 'text-buttonText' : 'text-textSecondary'
+                  }`}
+                />
+              </div>
+              <span
+                className={`text-xs ${
+                  cat.isSelected
+                    ? 'font-semibold text-primary'
+                    : 'font-normal text-textSecondary'
+                }`}
+              >
+                {cat.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* AI Scan Banner */}
+      <div className="px-4 pt-6">
+        <button
+          onClick={() => navigate('/ai-scanner')}
+          className="w-full bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 rounded-2xl p-5"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <h3 className="text-base font-bold text-primary mb-1.5">Upload List via AI</h3>
+              <p className="text-xs text-textSecondary leading-relaxed mb-3">
+                Scan your handwritten list and let our AI create your cart instantly.
+              </p>
+              <div className="inline-flex items-center gap-2 bg-primary rounded-xl px-4 py-2.5">
+                <QrCode className="w-4 h-4 text-buttonText" />
+                <span className="text-[13px] font-bold text-buttonText">Scan Now</span>
+              </div>
+            </div>
+            <div className="w-15 h-15 bg-surfaceVariant rounded-xl flex items-center justify-center flex-shrink-0">
+              <FileText className="w-8 h-8 text-textTertiary" />
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* AI Voice Cart Banner */}
+      <div className="px-4 pt-4">
+        <button
+          onClick={() => navigate('/ai-voice-cart')}
+          className="w-full bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 rounded-2xl p-5"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1.5">
+                <h3 className="text-base font-bold text-primary">🎙️ Voice Shopping</h3>
+                <span className="bg-primary text-buttonText text-[10px] font-black px-2 py-0.5 rounded tracking-wider">
+                  NEW
+                </span>
+              </div>
+              <p className="text-xs text-textSecondary leading-relaxed mb-3">
+                Shop with your voice! Just speak what you need in Hindi/English.
+              </p>
+              <div className="inline-flex items-center gap-2 bg-primary rounded-xl px-4 py-2.5">
+                <MicIcon className="w-4 h-4 text-buttonText" />
+                <span className="text-[13px] font-bold text-buttonText">Start Voice Shopping</span>
+              </div>
+            </div>
+            <div className="w-15 h-15 bg-surfaceVariant rounded-xl flex items-center justify-center flex-shrink-0">
+              <Mic className="w-8 h-8 text-textTertiary" />
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* Nearby Shops */}
+      <div className="px-4 pt-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-bold text-textPrimary">Nearby Shops</h2>
+          <button className="flex items-center gap-1">
+            <span className="text-xs font-medium text-textSecondary">Distance</span>
+            <ChevronDown className="w-4 h-4 text-textSecondary" />
+          </button>
+        </div>
+
+        {/* Store List */}
+        {isLoading ? (
+          <div className="flex justify-center py-10">
+            <Loading />
+          </div>
+        ) : stores.length === 0 ? (
+          <div className="text-center py-10">
+            <p className="text-textSecondary">No stores found nearby</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {stores.map((store) => (
+              <StoreCard
+                key={store.store_id}
+                store={store}
+                onClick={() => navigate(`/store/${store.store_id}`)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Padding */}
+      <div className="h-20" />
+
+      {/* Bottom Navigation */}
+      <BottomNavBar />
+    </div>
+  );
+};
+
+export default Home;
