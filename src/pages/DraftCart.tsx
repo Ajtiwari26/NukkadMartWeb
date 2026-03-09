@@ -23,7 +23,7 @@ const DraftCart: React.FC = () => {
   const location = useLocation();
   const { addItem } = useCartStore();
   
-  const { matchedItems = [], unmatchedItems = [], suggestions = [], storeId = '' } = location.state || {};
+  const { matchedItems = [], unmatchedItems = [], storeId = '' } = location.state || {};
   
   const [perfectMatches, setPerfectMatches] = useState<MatchedItem[]>(
     matchedItems.filter((item: any) => item.status === 'perfect')

@@ -29,7 +29,6 @@ const AIVoiceCart: React.FC = () => {
 
   const [state, setState] = useState<VoiceState>('idle');
   const [conversation, setConversation] = useState<ConversationMessage[]>([]);
-  const [selectedStoreName, setSelectedStoreName] = useState<string | null>(null);
   const [showStorePicker, setShowStorePicker] = useState(false);
   const [productSelection, setProductSelection] = useState<ProductSelectionEvent | null>(null);
   const [wavePhase, setWavePhase] = useState(0);
@@ -110,7 +109,6 @@ const AIVoiceCart: React.FC = () => {
 
   const handleStoreSelect = async (storeId: string, storeName: string) => {
     setShowStorePicker(false);
-    setSelectedStoreName(storeName);
 
     try {
       await serviceRef.current?.startSession('user_123', {
@@ -153,7 +151,6 @@ const AIVoiceCart: React.FC = () => {
     } else {
       serviceRef.current?.endSession();
       setState('idle');
-      setSelectedStoreName(null);
       setProductSelection(null);
     }
   };
