@@ -4,13 +4,13 @@ export const API_CONFIG = {
   // BASE_URL: 'http://localhost:8000',
   
   // Production backend
-  BASE_URL: 'http://13.235.254.91:8000',
+  BASE_URL: 'https://api.nukkadfoods.com',
   
   API_VERSION: '/api/v1',
   
   // WebSocket URL
   // WS_BASE_URL: 'ws://localhost:8000/api/v1',
-  WS_BASE_URL: 'ws://13.235.254.91:8000/api/v1',
+  WS_BASE_URL: 'wss://api.nukkadfoods.com/api/v1',
   
   // Timeouts
   TIMEOUT: 30000,
